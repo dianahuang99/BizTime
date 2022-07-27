@@ -7,21 +7,16 @@ const slugify = require("slugify");
 router.get("/", async (req, res, next) => {
   try {
     const results = await db.query(`SELECT * FROM industries`);
-    companies = [];
     for (let row of results.rows) {
-      const industry = await db.query(
-        `SELECT i.code, i.industry, c.name
-                       FROM industries AS i
-                         LEFT JOIN companies_industries AS ci 
-                           ON i.code = ci.industry_code
-                         LEFT JOIN companies AS c ON ci.comp_code = c.code
-                       WHERE i.code = $1;`,
+      const companies = await db.query(
+        `SELECT c.code
+                       FROM companies_industries AS ci
+                         LEFT JOIN companies AS c
+                           ON c.code = ci.comp_code
+                       WHERE ci.industry_code = $1;`,
         [row.code]
       );
-      companies.push(industry.rows);
-    }
-    for (company of companies) {
-      console.log(typeof company);
+      row["companies"] = companies.rows;
     }
     return res.json({ industries: results.rows });
   } catch (e) {

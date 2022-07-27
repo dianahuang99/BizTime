@@ -1,10 +1,16 @@
-\ c biztime DROP TABLE IF EXISTS invoices CASCADE;
+DROP DATABASE IF EXISTS biztime;
+
+CREATE DATABASE biztime;
+
+\ c biztime;
 
 DROP TABLE IF EXISTS companies CASCADE;
 
 DROP TABLE IF EXISTS industries CASCADE;
 
 DROP TABLE IF EXISTS companies_industries CASCADE;
+
+DROP TABLE IF EXISTS invoices CASCADE;
 
 CREATE TABLE companies (
   code text PRIMARY KEY,
