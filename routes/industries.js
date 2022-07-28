@@ -16,7 +16,9 @@ router.get("/", async (req, res, next) => {
                        WHERE ci.industry_code = $1;`,
         [row.code]
       );
-      row["companies"] = companies.rows;
+      row["companies"] = companies.rows.map((r) => {
+        return r.code;
+      });
     }
     return res.json({ industries: results.rows });
   } catch (e) {
@@ -57,6 +59,43 @@ router.post("/", async (req, res, next) => {
       [slugifiedCode, industry]
     );
     return res.status(201).json({ industry: results.rows[0] });
+  } catch (e) {
+    return next(e);
+  }
+});
+
+router.post("/associatecompany", async (req, res, next) => {
+  try {
+    const companyCode = req.body.company_code;
+    const industryCode = req.body.industry_code;
+
+    const companyResults = await db.query(
+      `SELECT * FROM companies WHERE code=$1`,
+      [companyCode]
+    );
+    if (companyResults.rows.length === 0) {
+      throw new ExpressError(
+        `Can't find company with code of ${companyCode}`,
+        404
+      );
+    }
+
+    const industryResults = await db.query(
+      `SELECT * FROM industries WHERE code=$1`,
+      [industryCode]
+    );
+    if (industryResults.rows.length === 0) {
+      throw new ExpressError(
+        `Can't find industry with code of ${industryCode}`,
+        404
+      );
+    }
+
+    const results = await db.query(
+      `INSERT INTO companies_industries (comp_code, industry_code) VALUES ($1, $2)RETURNING comp_code, industry_code`,
+      [companyCode, industryCode]
+    );
+    return res.status(201).json({ companies_industries: results.rows[0] });
   } catch (e) {
     return next(e);
   }

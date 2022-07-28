@@ -7,6 +7,19 @@ const slugify = require("slugify");
 router.get("/", async (req, res, next) => {
   try {
     const results = await db.query(`SELECT * FROM companies`);
+    for (let row of results.rows) {
+      const industries = await db.query(
+        `SELECT i.industry
+                         FROM companies_industries AS ci
+                           LEFT JOIN industries AS i
+                             ON i.code = ci.industry_code
+                         WHERE ci.comp_code = $1;`,
+        [row.code]
+      );
+      row["industries"] = industries.rows.map((r) => {
+        return r.industry;
+      });
+    }
     return res.json({ companies: results.rows });
   } catch (e) {
     return next(e);
@@ -32,8 +45,23 @@ router.get("/:code", async (req, res, next) => {
       [companyCode]
     );
 
+    const industryResults = await db.query(
+      `SELECT c.code, c.name, c.description, i.industry
+                   FROM companies AS c
+                     LEFT JOIN companies_industries AS ci 
+                       ON c.code = ci.comp_code
+                     LEFT JOIN industries AS i ON ci.industry_code = i.code
+                   WHERE c.code = $1;`,
+      [companyCode]
+    );
+    let { code, name, description } = industryResults.rows[0];
+    let industries = industryResults.rows.map((r) => r.industry);
+
     return res.json({
-      company: companyResults.rows[0],
+      code,
+      name,
+      description,
+      industries,
       invoices: invoiceResults.rows,
     });
   } catch (e) {

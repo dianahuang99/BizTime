@@ -31,7 +31,7 @@ CREATE TABLE invoices (
 CREATE TABLE industries (code TEXT PRIMARY KEY, industry TEXT UNIQUE);
 
 CREATE TABLE companies_industries (
-    comp_code TEXT NOT NULL REFERENCES companies,
-    industry_code TEXT NOT NULL REFERENCES industries,
+    comp_code TEXT NOT NULL REFERENCES companies ON DELETE CASCADE,
+    industry_code TEXT NOT NULL REFERENCES industries ON DELETE CASCADE,
     PRIMARY KEY(comp_code, industry_code)
 );
